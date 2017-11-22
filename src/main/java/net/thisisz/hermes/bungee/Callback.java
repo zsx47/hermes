@@ -1,8 +1,5 @@
 package net.thisisz.hermes.bungee;
 
-public interface Callback {
-
-    void run();
-
+public interface Callback extends AsyncTask {
 
 }
