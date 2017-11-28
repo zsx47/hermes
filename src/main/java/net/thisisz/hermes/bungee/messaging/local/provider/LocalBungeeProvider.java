@@ -146,7 +146,8 @@ public class LocalBungeeProvider implements LocalProvider {
             getPlugin().getProxy().getPlayer(sender).sendMessage(messageSender.create());
         }
         if (getPlugin().getProxy().getPlayer(to) != null) {
-            ComponentBuilder messageSender = new ComponentBuilder(translateCodes("&e[&6" + senderUser.getDisplayName() + "&e] &3--------> &e[&6me&e]: " + message));
+            ComponentBuilder messageTo = new ComponentBuilder(translateCodes("&e[&6" + senderUser.getDisplayName() + "&e] &3--------> &e[&6me&e]: " + message));
+            getPlugin().getProxy().getPlayer(to).sendMessage(messageTo.create());
         }
     }
 

@@ -35,6 +35,8 @@ public class PrivateMessage extends Command {
                     for (UUID uuid:uuids.keySet()) {
                         getPlugin().getMessagingController().sendPrivateMessage(((ProxiedPlayer)commandSender).getUniqueId(), uuid, message);
                     }
+                } else {
+                    commandSender.sendMessage(new ComponentBuilder(ChatColor.RED + "Couldn't find the player you are tring to message are you sure you spelled it right.").create());
                 }
             };
             getPlugin().getProxy().getScheduler().runAsync(getPlugin(), sendpm);
