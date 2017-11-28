@@ -73,10 +73,11 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
     public void sendPrivateMessage(UUID sender, UUID to, String message) {
         if (getPlugin().getProxy().getPlayer(to) != null) {
             controller.displayPrivateMessage(sender, to, message);
+        } else {
+            NetworkPrivateMessage obj = new NetworkPrivateMessage(sender, to, message);
+            Gson gson = new Gson();
+            getPlugin().getRedisBungeeAPI().sendChannelMessage("network-private-messages", gson.toJson(obj));
         }
-        NetworkPrivateMessage obj = new NetworkPrivateMessage(sender, to, message);
-        Gson gson = new Gson();
-        getPlugin().getRedisBungeeAPI().sendChannelMessage("network-private-messages", gson.toJson(obj));
     }
 
     @Override

@@ -142,11 +142,11 @@ public class LocalBungeeProvider implements LocalProvider {
         CachedUser senderUser = getPlugin().getStorageController().getCachedUser(sender);
         CachedUser toUser = getPlugin().getStorageController().getCachedUser(to);
         if (getPlugin().getProxy().getPlayer(sender) != null) {
-            ComponentBuilder messageSender = new ComponentBuilder(translateCodes("&e[&6me&e] &3--------> &e[&6" + toUser.getDisplayName() + "&e]: " + message));
+            ComponentBuilder messageSender = new ComponentBuilder(translateCodes("&e[&6me&e] &3---> &e[&6" + toUser.getDisplayName() + "&e]: " + message));
             getPlugin().getProxy().getPlayer(sender).sendMessage(messageSender.create());
         }
         if (getPlugin().getProxy().getPlayer(to) != null) {
-            ComponentBuilder messageTo = new ComponentBuilder(translateCodes("&e[&6" + senderUser.getDisplayName() + "&e] &3--------> &e[&6me&e]: " + message));
+            ComponentBuilder messageTo = new ComponentBuilder(translateCodes("&e[&6" + senderUser.getDisplayName() + "&e] &3---> &e[&6me&e]: " + message));
             getPlugin().getProxy().getPlayer(to).sendMessage(messageTo.create());
         }
     }
