@@ -7,8 +7,7 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.thisisz.hermes.bungee.HermesChat;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class PrivateMessage extends Command {
 
@@ -29,14 +28,16 @@ public class PrivateMessage extends Command {
                     commandSender.sendMessage(new ComponentBuilder(ChatColor.RED + "Too many players with similar names found try to be more specific.").create());
                 } else if (uuids.size() == 1) {
                     String message = "";
-                    for (String s: args) {
+                    List<String> messageParts = new ArrayList<String>(Arrays.asList(args));
+                    messageParts.remove(0);
+                    for (String s: messageParts) {
                         message = message + " " + s;
                     }
                     for (UUID uuid:uuids.keySet()) {
                         getPlugin().getMessagingController().sendPrivateMessage(((ProxiedPlayer)commandSender).getUniqueId(), uuid, message);
                     }
                 } else {
-                    commandSender.sendMessage(new ComponentBuilder(ChatColor.RED + "Couldn't find the player you are tring to message are you sure you spelled it right.").create());
+                    commandSender.sendMessage(new ComponentBuilder(ChatColor.RED + "Couldn't find the player you are trying to message are you sure you spelled it right.").create());
                 }
             };
             getPlugin().getProxy().getScheduler().runAsync(getPlugin(), sendpm);
