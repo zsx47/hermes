@@ -37,6 +37,7 @@ public class PrivateMessage extends Command {
                     }
                 }
             };
+            getPlugin().getProxy().getScheduler().runAsync(getPlugin(), sendpm);
         } else {
             commandSender.sendMessage(new ComponentBuilder(ChatColor.YELLOW + "usage: /message <to> <message>").create());
         }
