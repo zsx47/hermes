@@ -47,8 +47,8 @@ public class CachedUser {
         this.name = name;
     }
 
-    public HermesChat getPlugin() {
-        return controller.getPlugin();
+    private HermesChat getPlugin() {
+        return HermesChat.getPlugin();
     }
 
     public String getNickname() {
@@ -87,7 +87,7 @@ public class CachedUser {
         try {
             this.controller.saveNicknameAsync(this);
         } catch (GenericControllerException e) {
-            controller.getPlugin().getLogger().warning("Failed to save nickname for user with uuid '" + uuid.toString() + "'!" );
+            getPlugin().getLogger().warning("Failed to save nickname for user with uuid '" + uuid.toString() + "'!" );
         }
     }
 

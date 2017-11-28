@@ -16,7 +16,7 @@ public class LoadPrefix implements Runnable {
     }
 
     private HermesChat getPlugin() {
-        return user.getPlugin();
+        return HermesChat.getPlugin();
     }
 
     @Override

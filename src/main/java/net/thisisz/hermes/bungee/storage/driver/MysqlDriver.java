@@ -27,7 +27,7 @@ public class MysqlDriver implements StorageDriver {
     }
 
     public HermesChat getPlugin() {
-        return this.controller.getPlugin();
+        return HermesChat.getPlugin();
     }
 
     public void openConnection() throws SQLException, ClassNotFoundException {

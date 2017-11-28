@@ -12,20 +12,17 @@ import java.util.UUID;
 
 public class Nickname extends Command {
 
-    private HermesChat plugin;
-
-    public Nickname(HermesChat parent) {
+    public Nickname() {
         super("nickname", "hermes.nickname", "nick");
-        this.plugin = parent;
     }
 
-    public HermesChat getPlugin() {
-        return this.plugin;
+    private HermesChat getPlugin() {
+        return HermesChat.getPlugin();
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        CachedUser user = plugin.getStorageController().getCachedUser((ProxiedPlayer) sender);
+        CachedUser user = getPlugin().getStorageController().getCachedUser((ProxiedPlayer) sender);
         if (args.length == 0) {
             getPlugin().getMessagingController().sendNewNotification(((ProxiedPlayer) sender).getUniqueId(), "Your current display name is " + user.getDisplayName());
         } else if (args.length == 1) {

@@ -20,4 +20,6 @@ public interface NetworkProvider {
     void sendUserVanishStatus(UUID uuid, boolean status);
 
     void sendStaffChatMessage(UUID sender, String server, String message);
+
+    void sendPrivateMessage(UUID sender, UUID uuid, String message);
 }

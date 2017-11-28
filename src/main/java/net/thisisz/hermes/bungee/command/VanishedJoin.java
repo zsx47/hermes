@@ -7,15 +7,12 @@ import net.thisisz.hermes.bungee.HermesChat;
 
 public class VanishedJoin extends Command {
 
-    private HermesChat plugin;
-
-    public VanishedJoin(HermesChat plugin) {
+    public VanishedJoin() {
         super("vanishjoin", "hermes.vanishjoin", "vjoin");
-        this.plugin = plugin;
     }
 
-    public HermesChat getPlugin() {
-        return this.plugin;
+    private HermesChat getPlugin() {
+        return HermesChat.getPlugin();
     }
 
     @Override

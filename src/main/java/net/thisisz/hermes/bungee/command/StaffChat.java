@@ -8,16 +8,12 @@ import net.thisisz.hermes.bungee.HermesChat;
 
 public class StaffChat extends Command {
 
-
-    private HermesChat plugin;
-
-    public StaffChat(HermesChat parent) {
+    public StaffChat() {
         super("staffchat", "hermes.staffchat", "sc");
-        plugin = parent;
     }
 
-    public HermesChat getPlugin() {
-        return plugin;
+    private HermesChat getPlugin() {
+        return HermesChat.getPlugin();
     }
 
     @Override

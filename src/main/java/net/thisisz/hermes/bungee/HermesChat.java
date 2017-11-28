@@ -9,6 +9,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.thisisz.hermes.bungee.command.Nickname;
+import net.thisisz.hermes.bungee.command.PrivateMessage;
 import net.thisisz.hermes.bungee.command.StaffChat;
 import net.thisisz.hermes.bungee.command.VanishedJoin;
 import net.thisisz.hermes.bungee.messaging.MessagingController;
@@ -82,9 +83,10 @@ public class HermesChat extends Plugin {
         getProxy().getPluginManager().registerListener(this, listener);
 
         getLogger().info("Registering commands.");
-        getProxy().getPluginManager().registerCommand(this, new Nickname(this));
-        getProxy().getPluginManager().registerCommand(this, new VanishedJoin(this));
-        getProxy().getPluginManager().registerCommand(this, new StaffChat(this));
+        getProxy().getPluginManager().registerCommand(this, new Nickname());
+        getProxy().getPluginManager().registerCommand(this, new VanishedJoin());
+        getProxy().getPluginManager().registerCommand(this, new StaffChat());
+        getProxy().getPluginManager().registerCommand(this, new PrivateMessage());
 
         getLogger().info("Hermes chat loaded successfully!");
     }

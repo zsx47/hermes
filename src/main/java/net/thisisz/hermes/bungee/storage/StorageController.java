@@ -2,6 +2,7 @@ package net.thisisz.hermes.bungee.storage;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.thisisz.hermes.bungee.HermesChat;
+import net.thisisz.hermes.bungee.messaging.filter.Filter;
 import net.thisisz.hermes.bungee.storage.driver.StorageDriver;
 import net.thisisz.hermes.bungee.storage.exception.controller.GenericControllerException;
 import net.thisisz.hermes.bungee.storage.exception.driver.mysql.MysqlFatalException;
@@ -12,9 +13,7 @@ import net.thisisz.hermes.bungee.storage.exception.driver.mysql.MysqlSQLExceptio
 import net.thisisz.hermes.bungee.storage.tasks.SaveNickname;
 
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class StorageController {
 
@@ -134,12 +133,38 @@ public class StorageController {
         }
     }
 
+    public Map<UUID, String> findUsers(String name) {
+        Map<UUID, String> uuids = new HashMap<UUID, String>();
+        if (getPlugin().getRedisBungeeAPI() != null) {
+            for (UUID uuid: getPlugin().getRedisBungeeAPI().getPlayersOnline()) {
+                if (isLoaded(uuid)) {
+                    CachedUser user = getCachedUser(uuid);
+                    if (user.getName().contains(name) || user.getDisplayName().contains(name)) {
+                        uuids.put(user.getUUID(), user.getName());
+                    }
+                } else {
+                    String uname = getPlugin().getRedisBungeeAPI().getNameFromUuid(uuid);
+                    if (uname.contains(name)) {
+                        uuids.put(uuid, uname);
+                    }
+                }
+            }
+        } else {
+            for (ProxiedPlayer player : getPlugin().getProxy().getPlayers()) {
+                if (player.getDisplayName().contains(name) || player.getName().contains(name)) {
+                    uuids.put(player.getUniqueId(), player.getName());
+                }
+            }
+        }
+        return uuids;
+    }
+
     public void loadLocalUserToCache(ProxiedPlayer user) {
         loadLocalUserToCache(user.getUniqueId());
     }
 
-    public HermesChat getPlugin() {
-        return plugin;
+    private HermesChat getPlugin() {
+        return HermesChat.getPlugin();
     }
 
     public void unloadCachedPlayer(UUID uuid) {

@@ -45,6 +45,11 @@ public class LocalOnlyProvider implements NetworkProvider, net.md_5.bungee.api.p
     }
 
     @Override
+    public void sendPrivateMessage(UUID sender, UUID to, String message) {
+        controller.displayPrivateMessage(sender, to, message);
+    }
+
+    @Override
     public void sendChatMessage(UUID sender, String server, String message) {
     	controller.displayChatMessage(sender, server, message);
     }

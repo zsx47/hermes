@@ -27,11 +27,13 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
     public RedisBungeeProvider(MessagingController parent) {
         this.controller = parent;
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-chat-messages");
+        getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-private-messages");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-notification");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-error-message");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-nickname-updates");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-login-notification");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-staff-chat-messages");
+        getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-user-vanish-status");
         getPlugin().getProxy().getPluginManager().registerListener(getPlugin(), this);
     }
 
@@ -55,7 +57,9 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
 
     @Override
     public void sendUserVanishStatus(UUID uuid, boolean status) {
-
+        NetworkUserVanishStatus obj = new NetworkUserVanishStatus(uuid, status);
+        Gson gson = new Gson();
+        getPlugin().getRedisBungeeAPI().sendChannelMessage("network-user-vanish-status", gson.toJson(obj));
     }
 
     @Override
@@ -63,6 +67,16 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
         NetworkMessage obj = new NetworkMessage(sender, server, message);
         Gson gson = new Gson();
         getPlugin().getRedisBungeeAPI().sendChannelMessage("network-staff-chat-messages", gson.toJson(obj));
+    }
+
+    @Override
+    public void sendPrivateMessage(UUID sender, UUID to, String message) {
+        if (getPlugin().getProxy().getPlayer(to) != null) {
+            controller.displayPrivateMessage(sender, to, message);
+        }
+        NetworkPrivateMessage obj = new NetworkPrivateMessage(sender, to, message);
+        Gson gson = new Gson();
+        getPlugin().getRedisBungeeAPI().sendChannelMessage("network-private-messages", gson.toJson(obj));
     }
 
     @Override
@@ -122,6 +136,12 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
             case "network-chat-messages":
                 NetworkMessage networkMessage = gson.fromJson(event.getMessage(), NetworkMessage.class);
                 getPlugin().getProxy().getScheduler().runAsync(getPlugin(), new DisplayNetworkMessage(networkMessage, false));
+                break;
+            case "network-private-messages":
+                NetworkPrivateMessage networkPrivateMessage = gson.fromJson(event.getMessage(), NetworkPrivateMessage.class);
+                getPlugin().getProxy().getScheduler().runAsync(getPlugin(), () -> {
+                    controller.displayPrivateMessage(networkPrivateMessage.getSender(), networkPrivateMessage.getTo(), networkPrivateMessage.getMessage());
+                });
                 break;
             case "network-notification":
                 NetworkNotification networkNotification = gson.fromJson(event.getMessage(), NetworkNotification.class);

@@ -70,6 +70,18 @@ public class MessagingController {
         }
     }
 
+    public void displayPrivateMessage(UUID sender, UUID to, String message) {
+        if (getStorageController().isLoaded(sender)) {
+            if (getStorageController().isLoaded(to)) {
+                localProvider.displayPrivateMessage(sender, to, message);
+            } else {
+                loadCachedUserThenCallback(to, () -> displayPrivateMessage(sender, to, message));
+            }
+        } else {
+            loadCachedUserThenCallback(sender, () -> displayPrivateMessage(sender, to, message));
+        }
+    }
+
     public void displayUserNotification(UUID to, String message) {
     	if (getStorageController().isLoaded(to)) {
     		localProvider.displayUserNotification(getStorageController().getCachedUser(to), message);
@@ -116,6 +128,10 @@ public class MessagingController {
         networkProvider.sendChatMessage(sender.getUniqueId(), server.getInfo().getName(), message);
     }
 
+    public void sendPrivateMessage(UUID sender, UUID to, String message) {
+        networkProvider.sendPrivateMessage(sender, to, message);
+    }
+
     public void sendNewErrorMessage(ProxiedPlayer to, String message) {
     	networkProvider.sendNewUserErrorMessage(to.getUniqueId(), message);
     }
@@ -143,5 +159,4 @@ public class MessagingController {
     static MessagingController getMessagingController() {
     	return instance;
     }
-    
 }
