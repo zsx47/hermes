@@ -13,7 +13,7 @@ public class DisplayLoginNotification implements Runnable, Callback {
 
     public DisplayLoginNotification(UUID player) {
         this.player = player;
-        this.vjoin = true;
+        this.vjoin = false;
     }
 
     public DisplayLoginNotification(UUID player, boolean vjoin) {

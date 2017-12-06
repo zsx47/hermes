@@ -69,7 +69,11 @@ public class LocalBungeeProvider implements LocalProvider {
                 }
             }
         } else {
-            getPlugin().getProxy().broadcast(finalMessage.create());
+            for (ProxiedPlayer proxyPlayer : getPlugin().getProxy().getPlayers()) {
+                if (proxyPlayer.hasPermission("hermes.use")) {
+                    proxyPlayer.sendMessage(finalMessage.create());
+                }
+            }
         }
     }
 
@@ -104,15 +108,7 @@ public class LocalBungeeProvider implements LocalProvider {
         ComponentBuilder finalMessageVjoinSee = new ComponentBuilder("");
         finalMessageVjoinSee = finalMessageVjoinSee.append(new ComponentBuilder(translateCodes("&bPlayer ")).create()).append(playerPrefix.create())
                 .append(playerName.create()).append(new ComponentBuilder(translateCodes(" &bhas joined silently")).create());
-        for (ProxiedPlayer proxyPlayer : getPlugin().getProxy().getPlayers()) {
-            if (playervjoin) {
-                if (proxyPlayer.hasPermission("hermes.vanishjoin.see")) {
-                    proxyPlayer.sendMessage(finalMessageVjoinSee.create());
-                }
-            } else {
-                proxyPlayer.sendMessage(finalMessage.create());
-            }
-        }
+        showLeaveJoinMessage(finalMessage, finalMessageVjoinSee, vjoin);
     }
 
     @Override
@@ -126,13 +122,22 @@ public class LocalBungeeProvider implements LocalProvider {
         ComponentBuilder finalMessage = new ComponentBuilder("");
         finalMessage = finalMessage.append(new ComponentBuilder(translateCodes("&ePlayer ")).create()).append(playerPrefix.create())
                 .append(playerName.create()).append(new ComponentBuilder(translateCodes(" &ehas logged off")).create());
+        ComponentBuilder finalMessageVjoinSee = new ComponentBuilder("");
+        finalMessageVjoinSee = finalMessageVjoinSee.append(new ComponentBuilder(translateCodes("&bPlayer ")).create()).append(playerPrefix.create())
+                .append(playerName.create()).append(new ComponentBuilder(translateCodes(" &bhas joined silently")).create());
+        showLeaveJoinMessage(finalMessage, finalMessageVjoinSee, vjoin);
+    }
+
+    private void showLeaveJoinMessage(ComponentBuilder finalMessage, ComponentBuilder finalMessageVjoin, boolean vjoin) {
         for (ProxiedPlayer proxyPlayer : getPlugin().getProxy().getPlayers()) {
-            if (vjoin) {
-                 if (proxyPlayer.hasPermission("hermes.vanishjoin.see")) {
-                     proxyPlayer.sendMessage(finalMessage.create());
-                 }
-            } else {
-                proxyPlayer.sendMessage(finalMessage.create());
+            if (proxyPlayer.hasPermission("hermes.use")) {
+                if (vjoin) {
+                    if (proxyPlayer.hasPermission("hermes.vanishjoin.see")) {
+                        proxyPlayer.sendMessage(finalMessageVjoin.create());
+                    }
+                } else {
+                    proxyPlayer.sendMessage(finalMessage.create());
+                }
             }
         }
     }

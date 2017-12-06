@@ -30,7 +30,9 @@ public class HermesListener implements net.md_5.bungee.api.plugin.Listener {
                 String channel = in.readUTF();
                 if (channel.equals("HermesChatMessage")) {
                     String message = in.readUTF();
-                    getPlugin().getMessagingController().sendChatMessage((ProxiedPlayer) event.getReceiver(), getPlugin().getProxy().getPlayer(event.getReceiver().toString()).getServer(), message);
+                    if (((ProxiedPlayer) event.getReceiver()).hasPermission("hermes.use")) {
+                        getPlugin().getMessagingController().sendChatMessage((ProxiedPlayer) event.getReceiver(), getPlugin().getProxy().getPlayer(event.getReceiver().toString()).getServer(), message);
+                    }
                 }
             } catch (Exception e) {
                 getPlugin().getLogger().info("failed to read plugin message event.");
