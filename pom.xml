@@ -10,6 +10,12 @@
     <artifactId>hermes</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+
+    <modules>
+        <module>hermes-bungee</module>
+        <module>hermes-spigot</module>
+    </modules>
+
     <repositories>
         <repository>
             <id>bungeecord-repo</id>
