@@ -1,0 +1,1 @@
+docker run -it --rm --name hermes -v %cd%:/usr/src/hermes -w /usr/src/hermes maven:3.5.2-jdk-8 mvn clean install
