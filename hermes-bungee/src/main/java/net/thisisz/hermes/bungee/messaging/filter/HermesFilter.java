@@ -11,11 +11,9 @@ import java.util.Map;
 public class HermesFilter implements Filter {
 
     private HermesChat plugin;
-    private Map<String, String> regexFilters;
+    private Map<Pattern, String> regexFilters  = new HashMap<>();
 
-    public HermesFilter(HermesChat plugin) {
-        this.plugin = plugin;
-        this.regexFilters = new HashMap<String, String>();
+    public HermesFilter() {
         loadFilters();
     }
 
@@ -24,18 +22,18 @@ public class HermesFilter implements Filter {
         Collection<String> filterIndexes = filtersConfig.getKeys();
         for (String filterIndex:filterIndexes) {
             Configuration filter = filtersConfig.getSection(filterIndex);
-            regexFilters.put(filter.getString("replace"), filter.getString("with"));
+            regexFilters.put(Pattern.compile(filter.getString("replace")), filter.getString("with"));
         }
     }
 
-    public HermesChat getPlugin() {
-        return plugin;
+    private HermesChat getPlugin() {
+        return HermesChat.getPlugin();
     }
 
     @Override
     public String filterMessage(String message) {
-        for(String filter:regexFilters.keySet()) {
-            message = message.replaceAll(filter, regexFilters.get(filter));
+        for(Pattern filter:regexFilters.keySet()) {
+            message = filter.matcher(message).replaceAll(regexFilters.get(filter));
         }
         return message;
     }

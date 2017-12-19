@@ -14,6 +14,8 @@ import net.thisisz.hermes.bungee.command.StaffChat;
 import net.thisisz.hermes.bungee.command.VanishedJoin;
 import net.thisisz.hermes.bungee.messaging.MessagingController;
 import net.thisisz.hermes.bungee.storage.StorageController;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,7 @@ public class HermesChat extends Plugin {
     private StorageController storageController;
     private MessagingController messagingController;
     private RedisBungeeAPI redisBungeeAPI;
+    private JedisPool jedisPool;
     private static HermesChat instance;
 
     @Override
@@ -82,6 +85,14 @@ public class HermesChat extends Plugin {
 
         getProxy().getPluginManager().registerListener(this, listener);
 
+        if (getRedisBungeeAPI() != null) {
+            if (getConfiguration().getString("redis_password").equals("")) {
+                JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), getConfiguration().getString("redis_host"), getConfiguration().getInt("redis_port"), 10000);
+            } else {
+                JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), getConfiguration().getString("redis_host"), getConfiguration().getInt("redis_port"), 10000, getConfiguration().getString("redis_password"));
+            }
+        }
+
         getLogger().info("Registering commands.");
         getProxy().getPluginManager().registerCommand(this, new Nickname());
         getProxy().getPluginManager().registerCommand(this, new VanishedJoin());
@@ -118,5 +129,8 @@ public class HermesChat extends Plugin {
     public static HermesChat getPlugin() {
     	return instance;
     }
-    
+
+    public JedisPool getJedisPool() {
+        return jedisPool;
+    }
 }

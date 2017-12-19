@@ -1,12 +1,15 @@
 package net.thisisz.hermes.bungee.storage;
 
 import me.lucko.luckperms.api.Contexts;
+import me.lucko.luckperms.api.Tristate;
+import me.lucko.luckperms.api.caching.PermissionData;
 import me.lucko.luckperms.api.caching.UserData;
 import net.thisisz.hermes.bungee.HermesChat;
 import net.thisisz.hermes.bungee.storage.exception.controller.GenericControllerException;
 import net.thisisz.hermes.bungee.storage.tasks.LoadPrefix;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class CachedUser {
 
@@ -16,6 +19,7 @@ public class CachedUser {
     private String name;
     private UserData userData;
     private boolean vanished = false;
+    private Boolean isMuted;
 
     public CachedUser(UUID uuid, StorageController controller) {
         this.controller = controller;
@@ -71,7 +75,7 @@ public class CachedUser {
     }
 
     public boolean isLocal() {
-        return getPlugin().getProxy().getPlayer(this.uuid) != null;
+        return (getPlugin().getProxy().getPlayer(this.uuid) != null);
     }
 
     public void setNickname(String nickname) {
@@ -146,8 +150,46 @@ public class CachedUser {
         loadPrefix.run();
     }
 
+    public CompletableFuture<UserData> getData() {
+        return CompletableFuture.supplyAsync(() -> {
+            UUID luckUUID = getPlugin().getLuckApi().getUuidCache().getUUID(this.getUUID());
+            try {
+                return getPlugin().getLuckApi().getUser(luckUUID).getCachedData();
+            } catch (Exception e) {
+                getPlugin().getLuckApi().getStorage().loadUser(luckUUID).join();
+                UserData data = getPlugin().getLuckApi().getUser(luckUUID).getCachedData();
+                getPlugin().getLuckApi().cleanupUser(getPlugin().getLuckApi().getUser(luckUUID));
+                return data;
+            }
+        });
+    }
+
     public void setUserData(UserData udat) {
         this.userData = udat;
+    }
+
+    public CompletableFuture<PermissionData> getPermissionData() {
+        return getData().thenComposeAsync(data -> CompletableFuture.supplyAsync(() -> data.getPermissionData(Contexts.global())));
+    }
+
+    public CompletableFuture<Tristate> canVanish() {
+        return getPermissionData().thenComposeAsync(perms -> CompletableFuture.supplyAsync(() -> perms.getPermissionValue("hermes.vanishjoin")));
+    }
+
+    public CompletableFuture<Boolean> isMuted() {
+        if (getPlugin().getRedisBungeeAPI() != null) {
+            return getPlugin().getMessagingController().isMuted(uuid);
+        } else {
+            return CompletableFuture.supplyAsync(() -> isMuted);
+        }
+    }
+
+    public void setMuted(Boolean muted) {
+        if (getPlugin().getRedisBungeeAPI() != null) {
+            getPlugin().getMessagingController().setMuted(uuid, muted);
+        } else {
+            isMuted = muted;
+        }
     }
 
 }

@@ -14,6 +14,7 @@ import net.thisisz.hermes.bungee.storage.tasks.SaveNickname;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class StorageController {
 
@@ -102,6 +103,7 @@ public class StorageController {
         return userCache.containsKey(uuid);
     }
 
+    @Deprecated
     public CachedUser getCachedUser(UUID uuid) {
         if (userCache.containsKey(uuid)) {
             return userCache.get(uuid);
@@ -118,6 +120,27 @@ public class StorageController {
                     return userCache.get(uuid);
                 }
             }
+        }
+    }
+
+    public CompletableFuture<CachedUser> getUser(UUID uuid) {
+        if (userCache.containsKey(uuid)) {
+            return CompletableFuture.completedFuture(userCache.get(uuid));
+        } else {
+            return CompletableFuture.supplyAsync(() -> {
+                if (getPlugin().getProxy().getPlayer(uuid) != null) {
+                    loadLocalUserToCache(uuid);
+                    return userCache.get(uuid);
+                } else {
+                    if (getPlugin().getRedisBungeeAPI() != null) {
+                        loadNonLocalUserToCache(uuid, getPlugin().getRedisBungeeAPI().getNameFromUuid(uuid));
+                        return userCache.get(uuid);
+                    } else {
+                        loadNonLocalUserToCache(uuid,"name loading");
+                        return userCache.get(uuid);
+                    }
+                }
+            });
         }
     }
 

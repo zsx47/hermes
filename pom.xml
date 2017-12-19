@@ -6,6 +6,11 @@
     
     <name>Hermes</name>
 
+    <modules>
+        <module>hermes-bungee</module>
+        <module>hermes-spigot</module>
+    </modules>
+
     <groupId>net.thisisz.hermes</groupId>
     <artifactId>hermes</artifactId>
     <packaging>pom</packaging>

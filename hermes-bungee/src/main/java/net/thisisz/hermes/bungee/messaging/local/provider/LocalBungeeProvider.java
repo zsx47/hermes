@@ -91,12 +91,6 @@ public class LocalBungeeProvider implements LocalProvider {
 
     @Override
     public void displayLoginNotification(CachedUser player, boolean vjoin) {
-        Boolean playervjoin;
-        if (vjoin) {
-            playervjoin = getUserPermission(player, "hermes.vanishjoin");
-        } else {
-            playervjoin = false;
-        }
         ComponentBuilder realName = new ComponentBuilder(player.getName());
         HoverEvent showRealName = new HoverEvent(HoverEvent.Action.SHOW_TEXT, realName.create());
         ComponentBuilder playerName = new ComponentBuilder(translateCodes(player.getDisplayName()));
@@ -112,8 +106,7 @@ public class LocalBungeeProvider implements LocalProvider {
     }
 
     @Override
-    public void displayLogoutNotification(CachedUser player) {
-        Boolean vjoin = getUserPermission(player, "hermes.vanishjoin");
+    public void displayLogoutNotification(CachedUser player, boolean vjoin) {
         ComponentBuilder realName = new ComponentBuilder(player.getName());
         HoverEvent showRealName = new HoverEvent(HoverEvent.Action.SHOW_TEXT, realName.create());
         ComponentBuilder playerName = new ComponentBuilder(translateCodes(player.getDisplayName()));
@@ -124,7 +117,7 @@ public class LocalBungeeProvider implements LocalProvider {
                 .append(playerName.create()).append(new ComponentBuilder(translateCodes(" &ehas logged off")).create());
         ComponentBuilder finalMessageVjoinSee = new ComponentBuilder("");
         finalMessageVjoinSee = finalMessageVjoinSee.append(new ComponentBuilder(translateCodes("&bPlayer ")).create()).append(playerPrefix.create())
-                .append(playerName.create()).append(new ComponentBuilder(translateCodes(" &bhas joined silently")).create());
+                .append(playerName.create()).append(new ComponentBuilder(translateCodes(" &bhas left silently")).create());
         showLeaveJoinMessage(finalMessage, finalMessageVjoinSee, vjoin);
     }
 
@@ -143,16 +136,14 @@ public class LocalBungeeProvider implements LocalProvider {
     }
 
     @Override
-    public void displayPrivateMessage(UUID sender, UUID to, String message) {
-        CachedUser senderUser = getPlugin().getStorageController().getCachedUser(sender);
-        CachedUser toUser = getPlugin().getStorageController().getCachedUser(to);
-        if (getPlugin().getProxy().getPlayer(sender) != null) {
-            ComponentBuilder messageSender = new ComponentBuilder(translateCodes("&e[&6me&e] &3---> &e[&6" + toUser.getDisplayName() + "&e]: " + message));
-            getPlugin().getProxy().getPlayer(sender).sendMessage(messageSender.create());
+    public void displayPrivateMessage(CachedUser sender, CachedUser to, String message) {
+        if (sender.isLocal()) {
+            ComponentBuilder messageSender = new ComponentBuilder(translateCodes("&e[&6me&e] &3---> &e[&6" + to.getDisplayName() + "&e]: " + message));
+            getPlugin().getProxy().getPlayer(sender.getUUID()).sendMessage(messageSender.create());
         }
-        if (getPlugin().getProxy().getPlayer(to) != null) {
-            ComponentBuilder messageTo = new ComponentBuilder(translateCodes("&e[&6" + senderUser.getDisplayName() + "&e] &3---> &e[&6me&e]: " + message));
-            getPlugin().getProxy().getPlayer(to).sendMessage(messageTo.create());
+        if (to.isLocal()) {
+            ComponentBuilder messageTo = new ComponentBuilder(translateCodes("&e[&6" + sender.getDisplayName() + "&e] &3---> &e[&6me&e]: " + message));
+            getPlugin().getProxy().getPlayer(to.getUUID()).sendMessage(messageTo.create());
         }
     }
 

@@ -28,7 +28,7 @@ public class FilterManager {
     }
 
     private void loadDefaultFilter() {
-        this.filterCollection.add(new HermesFilter(getPlugin()));
+        this.filterCollection.add(new HermesFilter());
     }
 
     public String filterMessage(String message) {

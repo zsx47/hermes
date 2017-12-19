@@ -4,7 +4,10 @@ mysql_host: "localhost"
 mysql_database: "openchat"
 mysql_user: "user"
 mysql_pass: "pass"
-mysql_prefix: "oc_"
+mysql_prefix: "hc_"
+redis_host: 'localhost'
+redis_port: 6379
+redis_password: ""
 debug: true
 filters:
   test:

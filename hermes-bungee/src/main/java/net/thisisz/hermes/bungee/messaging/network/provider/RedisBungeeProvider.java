@@ -8,17 +8,16 @@ import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.event.EventHandler;
 import net.thisisz.hermes.bungee.HermesChat;
-import net.thisisz.hermes.bungee.LoadPlayerThenCallback;
 import net.thisisz.hermes.bungee.messaging.MessagingController;
-import net.thisisz.hermes.bungee.messaging.network.asynctask.common.DisplayLoginNotification;
-import net.thisisz.hermes.bungee.messaging.network.asynctask.common.DisplayLogoutNotification;
 import net.thisisz.hermes.bungee.messaging.network.asynctask.redis.DisplayNetworkErrorMessage;
 import net.thisisz.hermes.bungee.messaging.network.asynctask.redis.DisplayNetworkMessage;
 import net.thisisz.hermes.bungee.messaging.network.asynctask.redis.DisplayNetworkNotification;
 import net.thisisz.hermes.bungee.messaging.network.asynctask.redis.RemoteUpdateNickname;
 import net.thisisz.hermes.bungee.messaging.network.object.*;
+import redis.clients.jedis.Jedis;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api.plugin.Listener {
 
@@ -31,7 +30,6 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-notification");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-error-message");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-nickname-updates");
-        getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-login-notification");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-staff-chat-messages");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-user-vanish-status");
         getPlugin().getProxy().getPluginManager().registerListener(getPlugin(), this);
@@ -46,13 +44,6 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
         NetworkNicknameUpdate obj = new NetworkNicknameUpdate(uuid, nickname);
         Gson gson = new Gson();
         getPlugin().getRedisBungeeAPI().sendChannelMessage("network-nickname-updates", gson.toJson(obj));
-    }
-
-    @Override
-    public void sendLoginNotification(UUID uniqueId) {
-        NetworkLoginNotification obj = new NetworkLoginNotification(uniqueId);
-        Gson gson = new Gson();
-        getPlugin().getRedisBungeeAPI().sendChannelMessage("network-login-notification", gson.toJson(obj));
     }
 
     @Override
@@ -77,6 +68,24 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
             NetworkPrivateMessage obj = new NetworkPrivateMessage(sender, to, message);
             Gson gson = new Gson();
             getPlugin().getRedisBungeeAPI().sendChannelMessage("network-private-messages", gson.toJson(obj));
+        }
+    }
+
+    @Override
+    public CompletableFuture<Boolean> isMuted(UUID uuid) {
+        try (Jedis jedis = getPlugin().getJedisPool().getResource()) {
+            return CompletableFuture.supplyAsync(() -> jedis.sismember("muted_users", uuid.toString()));
+        }
+    }
+
+    @Override
+    public void setMuted(UUID uuid, Boolean muted) {
+        try (Jedis jedis = getPlugin().getJedisPool().getResource()) {
+            if (muted) {
+                getPlugin().getProxy().getScheduler().runAsync(getPlugin(), () -> jedis.sadd("muted_users", uuid.toString()));
+            } else {
+                getPlugin().getProxy().getScheduler().runAsync(getPlugin(), () -> jedis.srem("muted_users", uuid.toString()));
+            }
         }
     }
 
@@ -108,11 +117,14 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
 
     @EventHandler
     public void onPostLogin(PostLoginEvent event) {
+        if (getPlugin().getStorageController().isLoaded(event.getPlayer().getUniqueId())) {
+            getPlugin().getStorageController().getUser(event.getPlayer().getUniqueId()).thenAcceptAsync((user) -> event.getPlayer().setDisplayName(user.getDisplayName()));
+        }
         displayPlayerLogin(event.getPlayer().getUniqueId());
     }
 
     private void displayPlayerLogin(UUID player) {
-        getPlugin().getProxy().getScheduler().runAsync(getPlugin(), new LoadPlayerThenCallback(player, new DisplayLoginNotification(player)));    
+        getPlugin().getProxy().getScheduler().runAsync(getPlugin(), () -> controller.displayLoginNotification(player));
     }
     
 
@@ -127,7 +139,7 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
     }
 
     private void displayPlayerLogout(UUID player) {
-        getPlugin().getProxy().getScheduler().runAsync(getPlugin(), new DisplayLogoutNotification(this, player));
+        getPlugin().getProxy().getScheduler().runAsync(getPlugin(), () -> controller.displayLogoutNotification(player));
     }
 
     @EventHandler
@@ -155,10 +167,6 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
             case "network-nickname-updates":
                 NetworkNicknameUpdate networkNicknameUpdate = gson.fromJson(event.getMessage(), NetworkNicknameUpdate.class);
                 getPlugin().getProxy().getScheduler().runAsync(getPlugin(), new RemoteUpdateNickname(networkNicknameUpdate));
-                break;
-            case "network-login-notification":
-                NetworkLoginNotification networkLoginNotification = gson.fromJson(event.getMessage(), NetworkLoginNotification.class);
-                getPlugin().getProxy().getScheduler().runAsync(getPlugin(), new DisplayLoginNotification(networkLoginNotification.getUser(), false));
                 break;
             case "network-staff-chat-messages":
                 NetworkMessage networkStaffMessage = gson.fromJson(event.getMessage(), NetworkMessage.class);

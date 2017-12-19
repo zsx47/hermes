@@ -1,6 +1,7 @@
 package net.thisisz.hermes.bungee;
 
 import me.lucko.luckperms.api.event.user.UserDataRecalculateEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PluginMessageEvent;
 import net.md_5.bungee.event.EventHandler;
@@ -30,8 +31,16 @@ public class HermesListener implements net.md_5.bungee.api.plugin.Listener {
                 String channel = in.readUTF();
                 if (channel.equals("HermesChatMessage")) {
                     String message = in.readUTF();
-                    if (((ProxiedPlayer) event.getReceiver()).hasPermission("hermes.use")) {
-                        getPlugin().getMessagingController().sendChatMessage((ProxiedPlayer) event.getReceiver(), getPlugin().getProxy().getPlayer(event.getReceiver().toString()).getServer(), message);
+                    if (((ProxiedPlayer) event.getReceiver()).hasPermission("hermes.chat")) {
+                        getPlugin().getStorageController().getUser(((ProxiedPlayer) event.getReceiver()).getUniqueId()).thenAcceptAsync((user) -> {
+                           user.isMuted().thenAcceptAsync((muted) -> {
+                               if (muted) {
+                                   ((ProxiedPlayer) event.getReceiver()).sendMessage(new ComponentBuilder("You have been muted.").create());
+                               } else {
+                                   getPlugin().getMessagingController().sendChatMessage((ProxiedPlayer) event.getReceiver(), getPlugin().getProxy().getPlayer(event.getReceiver().toString()).getServer(), message);
+                               }
+                           });
+                        });
                     }
                 }
             } catch (Exception e) {

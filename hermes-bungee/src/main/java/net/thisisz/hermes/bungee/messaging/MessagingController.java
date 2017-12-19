@@ -6,12 +6,6 @@ import net.thisisz.hermes.bungee.Callback;
 import net.thisisz.hermes.bungee.HermesChat;
 import net.thisisz.hermes.bungee.LoadPlayerThenCallback;
 import net.thisisz.hermes.bungee.messaging.filter.FilterManager;
-import net.thisisz.hermes.bungee.messaging.local.callback.DisplayChatMessage;
-import net.thisisz.hermes.bungee.messaging.local.callback.DisplayLoginNotification;
-import net.thisisz.hermes.bungee.messaging.local.callback.DisplayLogoutNotification;
-import net.thisisz.hermes.bungee.messaging.local.callback.DisplayStaffChatMessage;
-import net.thisisz.hermes.bungee.messaging.local.callback.DisplayUserErrorMessage;
-import net.thisisz.hermes.bungee.messaging.local.callback.DisplayUserNotification;
 import net.thisisz.hermes.bungee.messaging.local.provider.LocalBungeeProvider;
 import net.thisisz.hermes.bungee.messaging.local.provider.LocalProvider;
 import net.thisisz.hermes.bungee.messaging.network.provider.LocalOnlyProvider;
@@ -20,6 +14,7 @@ import net.thisisz.hermes.bungee.messaging.network.provider.RedisBungeeProvider;
 import net.thisisz.hermes.bungee.storage.StorageController;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class MessagingController {
 
@@ -62,64 +57,35 @@ public class MessagingController {
 
     //Methods prefixed with display are returns from network controller system.
     public void displayChatMessage(UUID sender, String server, String message) {
-    	if (getStorageController().isLoaded(sender)) {
-            localProvider.displayChatMessage(getStorageController().getCachedUser(sender), getPlugin().getProxy().getServerInfo(server), message);
-        } else {
-            //load user in async call then call this method again
-            loadCachedUserThenCallback(sender, new DisplayChatMessage(sender, server, message));
-        }
+    	getStorageController().getUser(sender).thenAcceptAsync(user -> localProvider.displayChatMessage(user, getPlugin().getProxy().getServerInfo(server), message));
     }
 
     public void displayPrivateMessage(UUID sender, UUID to, String message) {
-        if (getStorageController().isLoaded(sender)) {
-            if (getStorageController().isLoaded(to)) {
-                localProvider.displayPrivateMessage(sender, to, message);
-            } else {
-                loadCachedUserThenCallback(to, () -> displayPrivateMessage(sender, to, message));
-            }
-        } else {
-            loadCachedUserThenCallback(sender, () -> displayPrivateMessage(sender, to, message));
-        }
+        getStorageController().getUser(sender).thenAcceptAsync(senderUser -> {
+            getStorageController().getUser(to).thenAcceptAsync(toUser -> {
+                localProvider.displayPrivateMessage(senderUser, toUser, message);
+            });
+        });
     }
 
     public void displayUserNotification(UUID to, String message) {
-    	if (getStorageController().isLoaded(to)) {
-    		localProvider.displayUserNotification(getStorageController().getCachedUser(to), message);
-        } else {
-            loadCachedUserThenCallback(to, new DisplayUserNotification(to, message));
-        }
+    	getStorageController().getUser(to).thenAcceptAsync(toUser -> localProvider.displayUserNotification(toUser, message));
     }
 
     public void displayUserErrorMessage(UUID to, String message) {
-    	if (getStorageController().isLoaded(to)) {
-            localProvider.displayUserErrorMessage(getStorageController().getCachedUser(to), message);
-        } else {
-            loadCachedUserThenCallback(to, new DisplayUserErrorMessage(to, message));
-        }
+        getStorageController().getUser(to).thenAcceptAsync(toUser -> localProvider.displayUserErrorMessage(toUser, message));
     }
 
-    public void displayLoginNotification(UUID player, boolean vjoin) {
-    	if (getStorageController().isLoaded(player)) {
-    		localProvider.displayLoginNotification(getStorageController().getCachedUser(player), vjoin);
-        } else {
-            loadCachedUserThenCallback(player, new DisplayLoginNotification(player, vjoin));
-        }
+    public void displayLoginNotification(UUID player) {
+        getStorageController().getUser(player).thenAcceptAsync(user -> user.canVanish().thenAcceptAsync(canVanish -> localProvider.displayLoginNotification(user, canVanish.asBoolean())));
     }
 
     public void displayLogoutNotification(UUID player) {
-    	if (getStorageController().isLoaded(player)) {
-    		localProvider.displayLogoutNotification(getStorageController().getCachedUser(player));
-        } else {
-            loadCachedUserThenCallback(player, new DisplayLogoutNotification(player));
-        }
+        getStorageController().getUser(player).thenAcceptAsync(user -> user.canVanish().thenAcceptAsync(canVanish -> localProvider.displayLogoutNotification(user, canVanish.asBoolean())));
     }
     
     public void displayStaffChatMessage(UUID sender, String server, String message) {
-    	if (getStorageController().isLoaded(sender)) {
-    		localProvider.displayStaffChatMessage(getStorageController().getCachedUser(sender), getPlugin().getProxy().getServerInfo(server), message);
-        } else {
-            loadCachedUserThenCallback(sender, new DisplayStaffChatMessage(sender, server, message));
-        }
+    	getStorageController().getUser(sender).thenAcceptAsync(user -> localProvider.displayStaffChatMessage(user, getPlugin().getProxy().getServerInfo(server), message));
     }
 
     //Methods prefixed with send new are sent out to network provider, so that any information can be passed to other bungee proxies via non local only messaging provider i.e. redisbungee
@@ -144,10 +110,6 @@ public class MessagingController {
     	networkProvider.sendNicknameUpdate(uuid, nickname);
     }
 
-    public void sendLoginNotification(ProxiedPlayer commandSender) {
-    	networkProvider.sendLoginNotification(commandSender.getUniqueId());
-    }
-
     public void sendUserVanishStatus(UUID uuid, boolean status) {
     	networkProvider.sendUserVanishStatus(uuid, status);
     }
@@ -158,5 +120,13 @@ public class MessagingController {
     
     static MessagingController getMessagingController() {
     	return instance;
+    }
+
+    public CompletableFuture<Boolean> isMuted(UUID uuid) {
+        return networkProvider.isMuted(uuid);
+    }
+
+    public void setMuted(UUID uuid, Boolean muted) {
+        networkProvider.setMuted(uuid, muted);
     }
 }

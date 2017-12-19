@@ -18,7 +18,7 @@ public interface LocalProvider {
 
     void displayLoginNotification(CachedUser player, boolean vjoin);
 
-    void displayLogoutNotification(CachedUser player);
+    void displayLogoutNotification(CachedUser player, boolean vjoin);
 
-    void displayPrivateMessage(UUID sender, UUID to, String message);
+    void displayPrivateMessage(CachedUser sender, CachedUser to, String message);
 }
