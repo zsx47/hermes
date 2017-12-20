@@ -75,6 +75,9 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
     public CompletableFuture<Boolean> isMuted(UUID uuid) {
         try (Jedis jedis = getPlugin().getJedisPool().getResource()) {
             return CompletableFuture.supplyAsync(() -> jedis.sismember("muted_users", uuid.toString()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(false);
         }
     }
 

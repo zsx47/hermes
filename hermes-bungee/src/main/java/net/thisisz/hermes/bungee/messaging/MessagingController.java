@@ -92,6 +92,8 @@ public class MessagingController {
     public void sendChatMessage(ProxiedPlayer sender, Server server, String message) {
         message = filterManager.filterMessage(message);
         networkProvider.sendChatMessage(sender.getUniqueId(), server.getInfo().getName(), message);
+        getPlugin().getStorageController().logChat(sender.getUniqueId(), message);
+        getPlugin().getLogger().info(sender.getName() + ": " + message);
     }
 
     public void sendPrivateMessage(UUID sender, UUID to, String message) {

@@ -194,4 +194,8 @@ public class StorageController {
         userCache.remove(uuid);
     }
 
+    public void logChat(UUID uuid, String message) {
+        getPlugin().getProxy().getScheduler().runAsync(getPlugin(),() -> driver.logChat(uuid, message));
+    }
+
 }

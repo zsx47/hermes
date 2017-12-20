@@ -28,6 +28,7 @@ public class Mute extends Command {
                     commandSender.sendMessage(new ComponentBuilder(ChatColor.RED + "Too many players with similar names found try to be more specific.").create());
                 } else if (uuids.size() == 1) {
                     getPlugin().getMessagingController().setMuted(uuids.keySet().iterator().next(), true);
+                    commandSender.sendMessage(new ComponentBuilder(uuids.get(uuids.keySet().iterator().next()) + " has been muted!").create());
                 } else {
                     commandSender.sendMessage(new ComponentBuilder(ChatColor.RED + "Couldn't find the player you are trying to message are you sure you spelled it right.").create());
                 }

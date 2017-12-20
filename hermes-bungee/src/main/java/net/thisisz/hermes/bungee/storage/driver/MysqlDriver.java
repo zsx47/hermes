@@ -133,6 +133,12 @@ public class MysqlDriver implements StorageDriver {
     private void createTablesIfNotExists() throws MysqlFatalException {
         try {
             executeUpdate("CREATE TABLE IF NOT EXISTS `" + tablePrefix + "nicknames` (uuid varchar(36) not null primary key, nickname varchar(200) null, UNIQUE (uuid));");
+            executeUpdate("CREATE TABLE IF NOT EXISTS " + tablePrefix + "chat_log\n" +
+                    "(\n" +
+                    "  uuid      VARCHAR(36)                         NOT NULL,\n" +
+                    "  message   TEXT                                NULL,\n" +
+                    "  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n" +
+                    ");");
         } catch (Exception e) {
             if (getPlugin().DebugMode()) {
                 e.printStackTrace();
@@ -146,7 +152,10 @@ public class MysqlDriver implements StorageDriver {
             DatabaseMetaData md = getMetaData();
             ResultSet rs = md.getColumns(null, null, tablePrefix + "nicknames", "uuid");
             ResultSet rs2 = md.getColumns(null, null, tablePrefix + "nicknames", "nickname");
-            if (rs.next() && rs2.next()) {
+            ResultSet rs3 = md.getColumns(null, null, tablePrefix + "chat_log", "uuid");
+            ResultSet rs4 = md.getColumns(null, null, tablePrefix + "chat_log", "message");
+            ResultSet rs5 = md.getColumns(null, null, tablePrefix + "chat_log", "timestamp");
+            if (rs.next() && rs2.next() && rs3.next() && rs4.next() && rs5.next()) {
                 return;
             }
             throw new MysqlFatalException("Table format incorrect.");
@@ -213,6 +222,20 @@ public class MysqlDriver implements StorageDriver {
         } catch (Exception e) {
             throw new MysqlFatalException("Failed to set nickname for uuid '" + uuid.toString() + "'.");
         }
+    }
+
+    @Override
+    public void logChat(UUID uuid, String message) {
+        try {
+            PreparedStatement pstmt = getNewPreparedStatement("INSERT INTO " + tablePrefix + "chat_log (uuid, message, timestamp) VALUES (?, ?, ?)");
+            pstmt.setString(1, uuid.toString());
+            pstmt.setString(2, message);
+            pstmt.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            pstmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

@@ -8,10 +8,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
-import net.thisisz.hermes.bungee.command.Nickname;
-import net.thisisz.hermes.bungee.command.PrivateMessage;
-import net.thisisz.hermes.bungee.command.StaffChat;
-import net.thisisz.hermes.bungee.command.VanishedJoin;
+import net.thisisz.hermes.bungee.command.*;
 import net.thisisz.hermes.bungee.messaging.MessagingController;
 import net.thisisz.hermes.bungee.storage.StorageController;
 import redis.clients.jedis.JedisPool;
@@ -86,11 +83,7 @@ public class HermesChat extends Plugin {
         getProxy().getPluginManager().registerListener(this, listener);
 
         if (getRedisBungeeAPI() != null) {
-            if (getConfiguration().getString("redis_password").equals("")) {
-                JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), getConfiguration().getString("redis_host"), getConfiguration().getInt("redis_port"), 10000);
-            } else {
-                JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), getConfiguration().getString("redis_host"), getConfiguration().getInt("redis_port"), 10000, getConfiguration().getString("redis_password"));
-            }
+            jedisPool = new JedisPool(new JedisPoolConfig(), getConfiguration().getString("redis_host"), getConfiguration().getInt("redis_port"), 10000, getConfiguration().getString("redis_password"));
         }
 
         getLogger().info("Registering commands.");
@@ -98,6 +91,8 @@ public class HermesChat extends Plugin {
         getProxy().getPluginManager().registerCommand(this, new VanishedJoin());
         getProxy().getPluginManager().registerCommand(this, new StaffChat());
         getProxy().getPluginManager().registerCommand(this, new PrivateMessage());
+        getProxy().getPluginManager().registerCommand(this, new Mute());
+        getProxy().getPluginManager().registerCommand(this, new UnMute());
 
         getLogger().info("Hermes chat loaded successfully!");
     }

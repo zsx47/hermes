@@ -3,6 +3,7 @@ package net.thisisz.hermes.bungee.messaging.local.provider;
 import me.lucko.luckperms.api.Contexts;
 import me.lucko.luckperms.api.caching.PermissionData;
 import me.lucko.luckperms.api.caching.UserData;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.ChatColor;
@@ -68,12 +69,14 @@ public class LocalBungeeProvider implements LocalProvider {
                     proxyPlayer.sendMessage(staffMessage.create());
                 }
             }
+            getPlugin().getLogger().info(BaseComponent.toPlainText(staffMessage.create()));
         } else {
             for (ProxiedPlayer proxyPlayer : getPlugin().getProxy().getPlayers()) {
                 if (proxyPlayer.hasPermission("hermes.use")) {
                     proxyPlayer.sendMessage(finalMessage.create());
                 }
             }
+            getPlugin().getLogger().info(BaseComponent.toPlainText(finalMessage.create()));
         }
     }
 
@@ -122,6 +125,11 @@ public class LocalBungeeProvider implements LocalProvider {
     }
 
     private void showLeaveJoinMessage(ComponentBuilder finalMessage, ComponentBuilder finalMessageVjoin, boolean vjoin) {
+        if (vjoin) {
+            getPlugin().getLogger().info(BaseComponent.toPlainText(finalMessageVjoin.create()));
+        } else {
+            getPlugin().getLogger().info(BaseComponent.toPlainText(finalMessage.create()));
+        }
         for (ProxiedPlayer proxyPlayer : getPlugin().getProxy().getPlayers()) {
             if (proxyPlayer.hasPermission("hermes.use")) {
                 if (vjoin) {
@@ -145,6 +153,7 @@ public class LocalBungeeProvider implements LocalProvider {
             ComponentBuilder messageTo = new ComponentBuilder(translateCodes("&e[&6" + sender.getDisplayName() + "&e] &3---> &e[&6me&e]: " + message));
             getPlugin().getProxy().getPlayer(to.getUUID()).sendMessage(messageTo.create());
         }
+        getPlugin().getLogger().info(translateCodes("[" + sender.getName() + "] ---> [" + to.getName() + "]: " + message));
     }
 
     private boolean getUserPermission(CachedUser user, String permission) {

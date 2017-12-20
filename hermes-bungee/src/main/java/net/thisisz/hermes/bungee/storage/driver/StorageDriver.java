@@ -12,4 +12,6 @@ public interface StorageDriver {
 
     void setNickname(UUID uuid, String nickname) throws GenericDriverException;
 
+    void logChat(UUID uuid, String message);
+
 }
