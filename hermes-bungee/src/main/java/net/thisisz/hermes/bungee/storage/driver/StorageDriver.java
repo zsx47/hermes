@@ -14,4 +14,6 @@ public interface StorageDriver {
 
     void logChat(UUID uuid, String message);
 
+    void logPm(UUID sender, UUID receiver, String message);
+
 }

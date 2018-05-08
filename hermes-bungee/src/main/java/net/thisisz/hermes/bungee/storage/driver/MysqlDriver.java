@@ -139,6 +139,13 @@ public class MysqlDriver implements StorageDriver {
                     "  message   TEXT                                NULL,\n" +
                     "  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n" +
                     ");");
+            executeUpdate("CREATE TABLE IF NOT EXISTS " + tablePrefix + "pm_log\n" +
+                    "(\n" +
+                    "  sender_uuid      VARCHAR(36)                         NOT NULL,\n" +
+                    "  receiver_uuid      VARCHAR(36)                         NOT NULL,\n" +
+                    "  message   TEXT                                NULL,\n" +
+                    "  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n" +
+                    ");");
         } catch (Exception e) {
             if (getPlugin().DebugMode()) {
                 e.printStackTrace();
@@ -155,7 +162,11 @@ public class MysqlDriver implements StorageDriver {
             ResultSet rs3 = md.getColumns(null, null, tablePrefix + "chat_log", "uuid");
             ResultSet rs4 = md.getColumns(null, null, tablePrefix + "chat_log", "message");
             ResultSet rs5 = md.getColumns(null, null, tablePrefix + "chat_log", "timestamp");
-            if (rs.next() && rs2.next() && rs3.next() && rs4.next() && rs5.next()) {
+            ResultSet rs6 = md.getColumns(null, null, tablePrefix + "pm_log", "sender_uuid");
+            ResultSet rs7 = md.getColumns(null, null, tablePrefix + "pm_log", "receiver_uuid");
+            ResultSet rs8 = md.getColumns(null, null, tablePrefix + "pm_log", "message");
+            ResultSet rs9 = md.getColumns(null, null, tablePrefix + "pm_log", "timestamp");
+            if (rs.next() && rs2.next() && rs3.next() && rs4.next() && rs5.next() && rs6.next() && rs7.next() && rs8.next() && rs9.next()) {
                 return;
             }
             throw new MysqlFatalException("Table format incorrect.");
@@ -170,8 +181,6 @@ public class MysqlDriver implements StorageDriver {
     //Driver init method will not make any attempt to catch MysqlFatalExceptions
     @Override
     public void runDriverInit() throws MysqlFatalException {
-        createTablesIfNotExists();
-        checkTableFormats();
         try {
             openConnection();
         } catch (Exception e) {
@@ -183,6 +192,8 @@ public class MysqlDriver implements StorageDriver {
                 }
             }
         }
+        createTablesIfNotExists();
+        checkTableFormats();
     }
 
     public String getNickname(UUID uuid) throws MysqlFatalException {
@@ -235,7 +246,20 @@ public class MysqlDriver implements StorageDriver {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
+    @Override
+    public void logPm(UUID sender, UUID receiver, String message) {
+        try {
+            PreparedStatement pstmt = getNewPreparedStatement("INSERT INTO " + tablePrefix + "pm_log (sender_uuid, receiver_uuid, message, timestamp) VALUES (?, ?, ?, ?)");
+            pstmt.setString(1, sender.toString());
+            pstmt.setString(2, receiver.toString());
+            pstmt.setString(3, message);
+            pstmt.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+            pstmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -64,10 +64,10 @@ public class CachedUser {
             if (name == null) {
                 return "NOPE!";
             } else {
-                return name;
+                return "&f" + name;
             }
         }
-        return nickname;
+        return "&f" + nickname;
     }
 
     public UUID getUUID() {
@@ -151,17 +151,7 @@ public class CachedUser {
     }
 
     public CompletableFuture<UserData> getData() {
-        return CompletableFuture.supplyAsync(() -> {
-            UUID luckUUID = getPlugin().getLuckApi().getUuidCache().getUUID(this.getUUID());
-            try {
-                return getPlugin().getLuckApi().getUser(luckUUID).getCachedData();
-            } catch (Exception e) {
-                getPlugin().getLuckApi().getStorage().loadUser(luckUUID).join();
-                UserData data = getPlugin().getLuckApi().getUser(luckUUID).getCachedData();
-                getPlugin().getLuckApi().cleanupUser(getPlugin().getLuckApi().getUser(luckUUID));
-                return data;
-            }
-        });
+        return getPlugin().getLuckApi().getUserManager().loadUser(uuid).thenComposeAsync(user -> CompletableFuture.supplyAsync(() -> user.getCachedData()));
     }
 
     public void setUserData(UserData udat) {

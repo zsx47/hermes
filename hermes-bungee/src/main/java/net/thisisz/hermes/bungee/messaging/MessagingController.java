@@ -88,16 +88,21 @@ public class MessagingController {
     	getStorageController().getUser(sender).thenAcceptAsync(user -> localProvider.displayStaffChatMessage(user, getPlugin().getProxy().getServerInfo(server), message));
     }
 
+    public void displayMeMessage(UUID uuid, String server, String message) {
+        getStorageController().getUser(uuid).thenAcceptAsync(user -> localProvider.displayMeMessage(user, getPlugin().getProxy().getServerInfo(server), message));
+    }
+
     //Methods prefixed with send new are sent out to network provider, so that any information can be passed to other bungee proxies via non local only messaging provider i.e. redisbungee
     public void sendChatMessage(ProxiedPlayer sender, Server server, String message) {
         message = filterManager.filterMessage(message);
         networkProvider.sendChatMessage(sender.getUniqueId(), server.getInfo().getName(), message);
         getPlugin().getStorageController().logChat(sender.getUniqueId(), message);
-        getPlugin().getLogger().info(sender.getName() + ": " + message);
     }
 
-    public void sendPrivateMessage(UUID sender, UUID to, String message) {
-        networkProvider.sendPrivateMessage(sender, to, message);
+    public void sendPrivateMessage(UUID sender, UUID receiver, String message) {
+        message = filterManager.filterMessage(message);
+        networkProvider.sendPrivateMessage(sender, receiver, message);
+        getPlugin().getStorageController().logPm(sender, receiver, message);
     }
 
     public void sendNewErrorMessage(ProxiedPlayer to, String message) {
@@ -131,4 +136,12 @@ public class MessagingController {
     public void setMuted(UUID uuid, Boolean muted) {
         networkProvider.setMuted(uuid, muted);
     }
+
+    public void sendMeMessage(ProxiedPlayer sender, Server server, String message) {
+        message = filterManager.filterMessage(message);
+        networkProvider.sendChatMessage(sender.getUniqueId(), server.getInfo().getName(), message);
+        networkProvider.sendMeMessage(sender.getUniqueId(), server.getInfo().getName(), message);
+    }
+
+
 }

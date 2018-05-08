@@ -25,4 +25,6 @@ public interface NetworkProvider {
     CompletableFuture<Boolean> isMuted(UUID uuid);
 
     void setMuted(UUID uuid, Boolean muted);
+
+    void sendMeMessage(UUID uniqueId, String server, String message);
 }

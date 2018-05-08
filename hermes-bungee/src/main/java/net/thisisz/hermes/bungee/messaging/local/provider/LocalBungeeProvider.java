@@ -156,6 +156,20 @@ public class LocalBungeeProvider implements LocalProvider {
         getPlugin().getLogger().info(translateCodes("[" + sender.getName() + "] ---> [" + to.getName() + "]: " + message));
     }
 
+    @Override
+    public void displayMeMessage(CachedUser user, ServerInfo serverInfo, String message) {
+        ComponentBuilder finalMessage = new ComponentBuilder("* ");
+        ComponentBuilder playerName = new ComponentBuilder(translateCodes(user.getDisplayName()));
+        ComponentBuilder realName = new ComponentBuilder(user.getName());
+        HoverEvent showRealName = new HoverEvent(HoverEvent.Action.SHOW_TEXT, realName.create());
+        playerName.event(showRealName);
+        finalMessage = finalMessage.append(playerName.create()).append(" ").append(message);
+        for (ProxiedPlayer player: getPlugin().getProxy().getPlayers()) {
+            player.sendMessage(finalMessage.create());
+        }
+        getPlugin().getLogger().info(BaseComponent.toPlainText(finalMessage.create()));
+    }
+
     private boolean getUserPermission(CachedUser user, String permission) {
         UUID luckUUID = getPlugin().getLuckApi().getUuidCache().getUUID(user.getUUID());
         UserData udat;

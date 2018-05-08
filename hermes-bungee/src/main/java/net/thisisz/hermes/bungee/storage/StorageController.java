@@ -198,4 +198,8 @@ public class StorageController {
         getPlugin().getProxy().getScheduler().runAsync(getPlugin(),() -> driver.logChat(uuid, message));
     }
 
+    public void logPm(UUID sender, UUID receiver, String message) {
+        getPlugin().getProxy().getScheduler().runAsync(getPlugin(),() -> driver.logPm(sender, receiver, message));
+    }
+
 }

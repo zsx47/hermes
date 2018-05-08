@@ -21,4 +21,6 @@ public interface LocalProvider {
     void displayLogoutNotification(CachedUser player, boolean vjoin);
 
     void displayPrivateMessage(CachedUser sender, CachedUser to, String message);
+
+    void displayMeMessage(CachedUser user, ServerInfo serverInfo, String message);
 }

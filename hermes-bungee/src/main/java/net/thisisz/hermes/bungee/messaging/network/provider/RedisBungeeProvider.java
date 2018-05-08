@@ -1,5 +1,6 @@
 package net.thisisz.hermes.bungee.messaging.network.provider;
 
+import com.google.common.graph.Network;
 import com.google.gson.Gson;
 import com.imaginarycode.minecraft.redisbungee.events.PlayerJoinedNetworkEvent;
 import com.imaginarycode.minecraft.redisbungee.events.PlayerLeftNetworkEvent;
@@ -32,6 +33,7 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-nickname-updates");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-staff-chat-messages");
         getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-user-vanish-status");
+        getPlugin().getRedisBungeeAPI().registerPubSubChannels("network-me-messages");
         getPlugin().getProxy().getPluginManager().registerListener(getPlugin(), this);
     }
 
@@ -90,6 +92,13 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
                 getPlugin().getProxy().getScheduler().runAsync(getPlugin(), () -> jedis.srem("muted_users", uuid.toString()));
             }
         }
+    }
+
+    @Override
+    public void sendMeMessage(UUID uniqueId, String server, String message) {
+        NetworkMeMessage obj = new NetworkMeMessage(uniqueId, server, message);
+        Gson gson = new Gson();
+        getPlugin().getRedisBungeeAPI().sendChannelMessage("network-me-messages", gson.toJson(obj));
     }
 
     @Override
@@ -174,6 +183,10 @@ public class RedisBungeeProvider implements NetworkProvider, net.md_5.bungee.api
             case "network-staff-chat-messages":
                 NetworkMessage networkStaffMessage = gson.fromJson(event.getMessage(), NetworkMessage.class);
                 getPlugin().getProxy().getScheduler().runAsync(getPlugin(), new DisplayNetworkMessage(networkStaffMessage, true));
+                break;
+            case "network-me-message":
+                NetworkMeMessage networkMeMessage = gson.fromJson(event.getMessage(), NetworkMeMessage.class);
+                getPlugin().getProxy().getScheduler().runAsync(getPlugin(), () -> controller.displayMeMessage(networkMeMessage.getSender(), networkMeMessage.getServer(), networkMeMessage.getMessage()));
                 break;
             default:
                 break;
